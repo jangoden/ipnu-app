@@ -35,6 +35,68 @@ use Filament\Forms\Components\FileUpload;
 
 class MemberResource extends Resource
 {
+    protected static ?string $model = Member::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    public static function getFormSchema(): array
+    {
+        return [
+            Section::make('Personal Info')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nik')->required()->maxLength(16)->unique(ignoreRecord: true),
+                    TextInput::make('nia')->unique(ignoreRecord: true),
+                    TextInput::make('full_name')->required(),
+                    TextInput::make('username')->required()->unique(ignoreRecord: true),
+                    TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
+                    TextInput::make('phone_number')->tel()->required(),
+                    TextInput::make('birth_place')->required(),
+                    DatePicker::make('birth_date')->required(),
+                    TextInput::make('hobby'),
+                    Select::make('status')->options(['active' => 'Active', 'inactive' => 'Inactive', 'banned' => 'Banned'])->required(),
+                    Select::make('grade')->options(['anggota' => 'Anggota', 'kader_makesta' => 'Kader Makesta', 'kader_lakmud' => 'Kader Lakmud', 'kader_lakut' => 'Kader Lakut'])->required(),
+                    TextInput::make('password')
+                        ->password()
+                        ->required(fn (string $context): bool => $context === 'create')
+                        ->dehydrated(fn ($state) => filled($state))
+                        ->visibleOn('create'),
+                ]),
+
+            Section::make('Address')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('province')->default('Jawa Barat')->required(),
+                    TextInput::make('city')->default('Kabupaten Ciamis')->required(),
+                    Select::make('district_id')
+                        ->relationship('district', 'name')
+                        ->searchable()
+                        ->live()
+                        ->afterStateUpdated(function (Set $set) {
+                            $set('village_id', null);
+                        })
+                        ->required(),
+                    Select::make('village_id')
+                        ->options(fn (Get $get): Collection => Village::query()->where('district_id', $get('district_id'))->pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+                    Textarea::make('address')->required()->columnSpanFull(),
+                ]),
+
+            Section::make('Alumni Info')
+                ->collapsible()
+                ->schema([
+                    Select::make('alumni_period_id')
+                        ->relationship('alumniPeriod', 'title')
+                        ->searchable(),
+                ]),
+        ];
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema(self::getFormSchema());
+    }
 
     public static function table(Table $table): Table
     {
