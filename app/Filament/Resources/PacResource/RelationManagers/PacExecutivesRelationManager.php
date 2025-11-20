@@ -54,11 +54,11 @@ class PacExecutivesRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()->authorize(true),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->authorize(true),
+                Tables\Actions\DeleteAction::make()->authorize(true),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
